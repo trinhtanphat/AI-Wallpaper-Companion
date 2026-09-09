@@ -1,0 +1,9 @@
+﻿bin/
+obj/
+.vs/
+src/**/bin/
+src/**/obj/
+tests/**/bin/
+tests/**/obj/
+logs/
+src/AIWallpaper/AIWallpaper.exe.WebView2/
