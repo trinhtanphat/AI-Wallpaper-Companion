@@ -22,6 +22,11 @@ public static class DesktopWindowLocator
                     return candidate;
                 }
             }
+
+            if (tree.GetClassName(host) == "Progman")
+            {
+                return host;
+            }
         }
 
         return nint.Zero;
