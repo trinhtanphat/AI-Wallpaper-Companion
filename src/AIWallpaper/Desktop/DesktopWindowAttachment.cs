@@ -9,18 +9,52 @@ public static class DesktopWindowAttachment
             return false;
         }
 
-        var style = NativeMethods.GetWindowLongPtr(child, NativeMethods.GwlStyle).ToInt64();
-        style &= ~NativeMethods.WsPopup;
-        style |= NativeMethods.WsChild;
-        NativeMethods.SetWindowLongPtr(child, NativeMethods.GwlStyle, (nint)style);
+        var style = NativeMethods.GetWindowLongPtr(child, NativeMethods.GwlStyle);
+        NativeMethods.SetWindowLongPtr(
+            child,
+            NativeMethods.GwlStyle,
+            WindowStylePolicy.MakeWindowStyle(style, interactive: false));
 
         var extended = NativeMethods.GetWindowLongPtr(child, NativeMethods.GwlExStyle);
-        var passive = WindowStylePolicy.MakePassiveExtendedStyle(extended);
-        NativeMethods.SetWindowLongPtr(child, NativeMethods.GwlExStyle, passive);
+        NativeMethods.SetWindowLongPtr(
+            child,
+            NativeMethods.GwlExStyle,
+            WindowStylePolicy.MakePassiveExtendedStyle(extended));
 
         _ = NativeMethods.SetParent(child, parent);
+        if (NativeMethods.GetParent(child) != parent)
+        {
+            return false;
+        }
+
+        _ = NativeMethods.SetLayeredWindowAttributes(
+            child,
+            0,
+            255,
+            NativeMethods.LwaAlpha);
         ResizeToParent(child, parent);
-        return NativeMethods.GetParent(child) == parent;
+        PlacePassive(child, parent);
+        return true;
+    }
+
+    private static void PlacePassive(nint child, nint parent)
+    {
+        var insertAfter = DesktopBandPolicy.SelectInsertAfter(
+            NativeMethods.FindWindowEx(parent, nint.Zero, "SHELLDLL_DefView", null),
+            NativeMethods.FindWindowEx(parent, nint.Zero, "WorkerW", null));
+
+        NativeMethods.SetWindowPos(
+            child,
+            insertAfter,
+            0,
+            0,
+            0,
+            0,
+            NativeMethods.SwpNoMove |
+            NativeMethods.SwpNoSize |
+            NativeMethods.SwpNoActivate |
+            NativeMethods.SwpShowWindow |
+            NativeMethods.SwpFrameChanged);
     }
 
     public static void ResizeToParent(nint child, nint parent)
@@ -34,7 +68,7 @@ public static class DesktopWindowAttachment
         var height = Math.Max(1, rect.Bottom - rect.Top);
         NativeMethods.SetWindowPos(
             child,
-            NativeMethods.HwndBottom,
+            NativeMethods.HwndTop,
             0,
             0,
             width,

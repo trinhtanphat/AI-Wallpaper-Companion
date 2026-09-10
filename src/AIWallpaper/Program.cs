@@ -7,9 +7,11 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        RuntimeDiagnostics.Reset();
         Win32WindowTree.PrepareWallpaperHost();
         var tree = new Win32WindowTree();
         var parent = DesktopWindowLocator.FindWallpaperParent(tree);
+        RuntimeDiagnostics.Log($"Selected desktop parent=0x{parent.ToInt64():X}");
 
         if (args.Contains("--self-check", StringComparer.OrdinalIgnoreCase))
         {

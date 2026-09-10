@@ -1,0 +1,24 @@
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#061326;font-family:"Segoe UI",system-ui,sans-serif}
+.scene{--skin:1.10;--dim:.03;--glow:.12;--px:0px;--py:0px;position:relative;width:100vw;height:100vh;overflow:hidden;background:#061326}
+.night-depth{position:absolute;inset:0;background:radial-gradient(circle at 88% 47%,rgba(244,86,93,.08),transparent 25%),linear-gradient(135deg,#061326 0%,#081b37 42%,#170c20 100%)}
+.video-shell{position:absolute;inset:0;width:100vw;height:100vh;overflow:hidden;transform:none;filter:none;contain:paint}
+.poster,.living-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;pointer-events:none}
+.poster{z-index:1;opacity:1;filter:brightness(.92);transition:opacity .35s ease}.poster.hidden{opacity:0}
+.living-video{opacity:0;transition-property:opacity;transition-timing-function:cubic-bezier(.22,.78,.25,1);will-change:opacity}.living-video.visible{opacity:1}
+.loop-video{z-index:2}.transition-video{z-index:3}
+.screen-glow{position:absolute;z-index:4;left:35%;top:18%;width:52%;height:66%;border-radius:50%;background:radial-gradient(ellipse at center,rgba(255,225,214,.22),rgba(255,166,172,.06) 46%,transparent 72%);opacity:var(--glow);transition:opacity .55s ease,transform .18s linear;will-change:transform,opacity;pointer-events:none}
+.video-shell::after{content:"";position:absolute;inset:0;z-index:5;background:rgba(2,8,18,var(--dim));transition:background-color .55s ease;pointer-events:none}
+.left-veil{position:absolute;inset:0;z-index:6;background:linear-gradient(90deg,rgba(5,19,41,.93) 0%,rgba(5,19,41,.84) 16%,rgba(5,19,41,.48) 28%,rgba(5,19,41,.12) 39%,transparent 52%);pointer-events:none}
+.brightness-hud{position:absolute;z-index:8;left:50%;bottom:8.5vh;display:grid;grid-template-columns:46px minmax(260px,420px) 68px;align-items:center;gap:15px;width:min(620px,58vw);padding:18px 22px;border:1px solid rgba(255,255,255,.15);border-radius:20px;background:linear-gradient(135deg,rgba(28,31,43,.76),rgba(64,55,71,.68));box-shadow:0 18px 70px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.08);backdrop-filter:blur(22px);color:#f7f6fb;transform:translate(-50%,20px) scale(.98);opacity:0;transition:opacity .22s ease,transform .26s ease;pointer-events:none}
+.brightness-hud.visible{opacity:1;transform:translate(-50%,0) scale(1)}
+.sun{font-size:32px;text-align:center;text-shadow:0 0 20px rgba(255,236,194,.38)}
+.brightness-main{min-width:0}.bar{position:relative;height:8px;border-radius:99px;background:rgba(255,255,255,.20);overflow:visible}
+.bar i{display:block;width:100%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#518bff,#b9eaff,#fff3db);box-shadow:0 0 18px rgba(105,176,255,.20)}
+.bar b{position:absolute;top:50%;left:100%;width:30px;height:30px;border-radius:50%;background:#fff;box-shadow:0 4px 18px rgba(0,0,0,.35);transform:translate(-50%,-50%)}
+.caption{margin-top:13px;text-align:center;font-size:12px;letter-spacing:.04em;color:rgba(247,246,251,.74)}.brightness-hud strong{font-size:15px;text-align:right}
+.speech{position:absolute;z-index:7;right:4vw;top:45vh;max-width:260px;padding:11px 15px;border:1px solid rgba(190,207,255,.18);border-radius:17px 17px 4px 17px;background:rgba(15,20,38,.48);backdrop-filter:blur(14px);box-shadow:0 12px 40px rgba(0,0,0,.23);color:#ececf7;font-size:13px;opacity:0;transform:translateY(7px);transition:opacity .25s ease,transform .3s ease;pointer-events:none}
+.speech.visible{opacity:.88;transform:none}
+.desktop-hint{position:absolute;z-index:7;right:26px;bottom:22px;padding:7px 11px;border-radius:999px;background:rgba(3,11,24,.28);border:1px solid rgba(255,255,255,.06);color:rgba(189,213,236,.50);font-size:9px;letter-spacing:.12em;backdrop-filter:blur(10px);pointer-events:none}
+@keyframes roomPulse{0%,100%{opacity:.74}50%{opacity:1}}
+@media(max-width:900px){.left-veil{background:linear-gradient(90deg,rgba(5,19,41,.88),rgba(5,19,41,.52) 28%,transparent 60%)}.brightness-hud{width:84vw;grid-template-columns:38px 1fr 55px}.desktop-hint{display:none}.speech{right:3vw;top:40vh}}

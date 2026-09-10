@@ -3,7 +3,7 @@ using System.Text;
 
 namespace AIWallpaper.Desktop;
 
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     internal const uint SpawnWorkerMessage = 0x052C;
     internal const uint SmtoNormal = 0x0000;
@@ -14,10 +14,21 @@ internal static class NativeMethods
     internal const long WsExTopmost = 0x00000008L;
     internal const long WsExTransparent = 0x00000020L;
     internal const long WsExToolWindow = 0x00000080L;
+    internal const long WsExLayered = 0x00080000L;
     internal const long WsExNoActivate = 0x08000000L;
+    internal const uint LwaAlpha = 0x00000002;
+    internal const uint WmHotKey = 0x0312;
+    internal const uint ModAlt = 0x0001;
+    internal const uint ModControl = 0x0002;
+    internal const uint ModNoRepeat = 0x4000;
+    internal const uint VkW = 0x57;
+    internal static readonly nint HwndTop = nint.Zero;
     internal static readonly nint HwndBottom = (nint)1;
     internal const uint SwpNoActivate = 0x0010;
     internal const uint SwpShowWindow = 0x0040;
+    internal const uint SwpNoMove = 0x0002;
+    internal const uint SwpNoSize = 0x0001;
+    internal const uint SwpFrameChanged = 0x0020;
 
     internal delegate bool EnumWindowsProc(nint hwnd, nint lParam);
 
@@ -69,6 +80,14 @@ internal static class NativeMethods
     [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
     internal static extern nint SetWindowLongPtr(nint hwnd, int index, nint newLong);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SetLayeredWindowAttributes(
+        nint hwnd,
+        uint colorKey,
+        byte alpha,
+        uint flags);
+
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool GetClientRect(nint hwnd, out Rect rect);
@@ -83,4 +102,12 @@ internal static class NativeMethods
         int width,
         int height,
         uint flags);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    internal static extern bool RegisterHotKey(nint hwnd, int id, uint modifiers, uint virtualKey);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    internal static extern bool UnregisterHotKey(nint hwnd, int id);
 }

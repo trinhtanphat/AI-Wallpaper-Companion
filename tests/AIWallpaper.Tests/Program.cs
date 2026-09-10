@@ -1,3 +1,4 @@
+using AIWallpaper;
 using AIWallpaper.Desktop;
 
 var tests = new List<(string Name, Action Body)>
@@ -6,7 +7,9 @@ var tests = new List<(string Name, Action Body)>
     ("desktop locator fails closed when no wallpaper WorkerW exists", DesktopLocatorFailsClosed),
     ("desktop locator uses Progman when Progman owns DefView", DesktopLocatorUsesProgmanFallback),
     ("native window tree can enumerate Progman", NativeWindowTreeEnumeratesProgman),
-    ("passive wallpaper style is click-through and not topmost", PassiveStyleIsSafe)
+    ("passive wallpaper style is click-through and not topmost", PassiveStyleIsSafe),
+    ("local chat responder answers greeting deterministically", LocalChatRespondsToGreeting),
+    ("wallpaper attach policy waits until shown", WallpaperAttachWaitsUntilShown)
 };
 
 var failed = 0;
@@ -30,7 +33,8 @@ static void DesktopLocatorSelectsWallpaperWorker()
 {
     var tree = new FakeWindowTree(
         new nint[] { 10, 20, 30 },
-        new Dictionary<nint, string> { [10] = "Progman", [20] = "WorkerW", [30] = "WorkerW" },        new Dictionary<(nint, string), nint> { [(20, "SHELLDLL_DefView")] = 21 });
+        new Dictionary<nint, string> { [10] = "Progman", [20] = "WorkerW", [30] = "WorkerW" },
+        new Dictionary<(nint, string), nint> { [(20, "SHELLDLL_DefView")] = 21 });
 
     var result = DesktopWindowLocator.FindWallpaperParent(tree);
     AssertEqual((nint)30, result, "wallpaper parent");
@@ -57,6 +61,7 @@ static void DesktopLocatorUsesProgmanFallback()
     var result = DesktopWindowLocator.FindWallpaperParent(tree);
     AssertEqual((nint)10, result, "Progman wallpaper parent");
 }
+
 static void NativeWindowTreeEnumeratesProgman()
 {
     var tree = new Win32WindowTree();
@@ -81,6 +86,24 @@ static void PassiveStyleIsSafe()
     }
 }
 
+static void LocalChatRespondsToGreeting()
+{
+    var reply = LocalChatResponder.GetReply("xin chào");
+    AssertEqual("Xin chào! Mình đang ở ngay trên desktop của bạn.", reply, "greeting reply");
+}
+
+static void WallpaperAttachWaitsUntilShown()
+{
+    if (WallpaperLifecyclePolicy.ShouldAttach(WallpaperLifecycleEvent.HandleCreated))
+    {
+        throw new InvalidOperationException("must not attach during HandleCreated");
+    }
+    if (!WallpaperLifecyclePolicy.ShouldAttach(WallpaperLifecycleEvent.Shown))
+    {
+        throw new InvalidOperationException("must attach after the form is shown");
+    }
+}
+
 static void AssertEqual<T>(T expected, T actual, string label) where T : IEquatable<T>
 {
     if (!actual.Equals(expected))
@@ -88,6 +111,7 @@ static void AssertEqual<T>(T expected, T actual, string label) where T : IEquata
         throw new InvalidOperationException($"{label}: expected {expected}, got {actual}");
     }
 }
+
 sealed class FakeWindowTree : IWindowTree
 {
     private readonly IReadOnlyList<nint> _topLevel;

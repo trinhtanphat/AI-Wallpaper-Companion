@@ -12,23 +12,17 @@ public sealed class Win32WindowTree : IWindowTree
             return nint.Zero;
         }
 
-        NativeMethods.SendMessageTimeout(
-            progman,
-            NativeMethods.SpawnWorkerMessage,
-            (nint)0xD,
-            (nint)0x1,
-            NativeMethods.SmtoNormal,
-            1000,
-            out _);
-
-        NativeMethods.SendMessageTimeout(
-            progman,
-            NativeMethods.SpawnWorkerMessage,
-            (nint)0xD,
-            nint.Zero,
-            NativeMethods.SmtoNormal,
-            1000,
-            out _);
+        foreach (var message in DesktopShellPolicy.RaisedDesktopSpawnSequence)
+        {
+            NativeMethods.SendMessageTimeout(
+                progman,
+                NativeMethods.SpawnWorkerMessage,
+                message.WParam,
+                message.LParam,
+                NativeMethods.SmtoNormal,
+                1000,
+                out _);
+        }
 
         return progman;
     }
