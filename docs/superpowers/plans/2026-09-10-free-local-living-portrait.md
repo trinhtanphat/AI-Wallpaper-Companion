@@ -37,4 +37,4 @@
 - [x] Remove obsolete four-clip files/references.
 - [x] Run full tests and Release build.
 - [x] Verify runtime behavior at 99% and 100%, chat hotkey, and desktop z-order.
-- [ ] Commit final changes, create public GitHub repository, and push `main`.
+- [x] Commit final changes, create public GitHub repository, and push `main`.
