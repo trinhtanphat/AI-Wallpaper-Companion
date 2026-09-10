@@ -117,7 +117,8 @@ public sealed class WebRenderer
             skinLight = BrightnessReactionPolicy.SkinLight(percent),
             loop = plan.LoopAsset,
             transition = plan.TransitionAsset,
-            fadeMs = plan.FadeMs
+            fadeMs = plan.FadeMs,
+            loopTarget = plan.LoopTarget
         });
     }
 

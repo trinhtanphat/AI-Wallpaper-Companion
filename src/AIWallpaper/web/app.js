@@ -1,5 +1,4 @@
 const scene = document.getElementById('scene');
-const videoShell = document.getElementById('videoShell');
 const poster = document.getElementById('poster');
 const loopA = document.getElementById('loopA');
 const loopB = document.getElementById('loopB');
@@ -22,14 +21,15 @@ let speechTimer = 0;
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-const stateLabel = state => state === 'sleep' ? 'Sleep' : state === 'drowsy' ? 'Drowsy' : 'Awake';
-
+const stateLabel = state => state === 'awake' ? 'Awake · MAX' : state === 'sleep' ? 'Sleep' : 'Dim';
 function showSpeech(text, ms = 2400) {
   speech.textContent = text;
   speech.classList.add('visible');
   clearTimeout(speechTimer);
   speechTimer = setTimeout(() => speech.classList.remove('visible'), ms);
-}function showBrightnessHud(percent, state) {
+}
+
+function showBrightnessHud(percent, state) {
   fill.style.width = `${percent}%`;
   knob.style.left = `${percent}%`;
   valueText.textContent = `${percent}%`;
@@ -40,7 +40,8 @@ function showSpeech(text, ms = 2400) {
 }
 
 function prepareVideo(video, asset, loop) {
-  if (video.dataset.asset !== asset) {
+  const changed = video.dataset.asset !== asset;
+  if (changed) {
     video.src = asset;
     video.dataset.asset = asset;
     video.load();
@@ -49,19 +50,24 @@ function prepareVideo(video, asset, loop) {
   video.muted = true;
   video.playsInline = true;
   video.playbackRate = 1;
+  if (!loop) {
+    const reset = () => {
+      try { video.currentTime = 0; } catch { }
+    };
+    if (video.readyState >= 1) reset();
+    else video.addEventListener('loadedmetadata', reset, { once: true });
+  }
   return video.play().catch(() => null);
 }
 
-async function switchLoop(asset, fadeMs, token) {
+async function switchLoop(asset, fadeMs, token, loopTarget = true) {
   if (!asset) return;
-  if (currentLoopAsset === asset && activeLoop.classList.contains('visible')) {
-    await prepareVideo(activeLoop, asset, true);
-    poster.classList.add('hidden');
-    return;
-  }
+  if (currentLoopAsset === asset && activeLoop.classList.contains('visible')) return;
+
   const next = standbyLoop;
-  await prepareVideo(next, asset, true);
-  if (token !== playbackToken) return;  next.style.transitionDuration = `${fadeMs}ms`;
+  await prepareVideo(next, asset, loopTarget);
+  if (token !== playbackToken) return;
+  next.style.transitionDuration = `${fadeMs}ms`;
   activeLoop.style.transitionDuration = `${fadeMs}ms`;
   next.classList.add('visible');
   activeLoop.classList.remove('visible');
@@ -75,9 +81,9 @@ async function switchLoop(asset, fadeMs, token) {
   currentLoopAsset = asset;
 }
 
-async function playTransition(asset, targetLoop, fadeMs, token) {
+async function playTransition(asset, targetLoop, fadeMs, token, loopTarget) {
   if (!asset) {
-    await switchLoop(targetLoop, fadeMs, token);
+    await switchLoop(targetLoop, fadeMs, token, loopTarget);
     return;
   }
 
@@ -94,22 +100,24 @@ async function playTransition(asset, targetLoop, fadeMs, token) {
   setTimeout(() => {
     if (token === playbackToken) activeLoop.pause();
   }, transitionFade + 60);
-
   const finish = () => {
     if (token !== playbackToken) return;
     transitionVideo.classList.remove('visible');
-    void switchLoop(targetLoop, fadeMs, token);
+    void switchLoop(targetLoop, fadeMs, token, loopTarget);
   };
   transitionVideo.onended = finish;
   transitionVideo.onerror = finish;
-}function setBrightness(data) {
+}
+
+function setBrightness(data) {
   const percent = clamp(Number(data.value ?? 50), 0, 100);
-  const state = String(data.state || 'awake').toLowerCase();
+  const state = String(data.state || 'drowsy').toLowerCase();
   const skin = clamp(Number(data.skinLight ?? (0.72 + percent * 0.005)), 0.68, 1.28);
-  const fadeMs = clamp(Number(data.fadeMs ?? 450), 180, 1200);
-  const loopAsset = String(data.loop || 'assets/video/awake-loop.mp4');
+  const fadeMs = clamp(Number(data.fadeMs ?? 720), 180, 1200);
+  const loopAsset = String(data.loop || 'assets/video/segment-03-sleep.mp4');
   const transitionAsset = data.transition ? String(data.transition) : null;
-  const stateChanged = currentState !== state || currentLoopAsset !== loopAsset;
+  const loopTarget = Boolean(data.loopTarget);
+  const visualChanged = currentLoopAsset !== loopAsset || Boolean(transitionAsset);
 
   const dim = clamp(0.30 - (percent * 0.0027), 0.03, 0.30);
   const glow = clamp((skin - 0.72) * 0.30, 0.02, 0.12);
@@ -118,18 +126,18 @@ async function playTransition(asset, targetLoop, fadeMs, token) {
   scene.style.setProperty('--glow', glow.toFixed(3));
   scene.classList.remove('state-sleep', 'state-drowsy', 'state-awake');
   scene.classList.add(`state-${state}`);
-
-  if (stateChanged) {
-    currentState = state;
+  currentState = state;
+  if (visualChanged) {
     const token = ++playbackToken;
-    if (transitionAsset) void playTransition(transitionAsset, loopAsset, fadeMs, token);
-    else void switchLoop(loopAsset, fadeMs, token);
+    if (transitionAsset) void playTransition(transitionAsset, loopAsset, fadeMs, token, loopTarget);
+    else void switchLoop(loopAsset, fadeMs, token, loopTarget);
   }
 
   const changed = Math.abs(percent - lastBrightness) >= 1;
   if (changed) showBrightnessHud(Math.round(percent), state);
-  if (data.wake && percent >= 55) showSpeech('Mình thức rồi ✦');
-  else if (changed && percent < lastBrightness && percent < 30) showSpeech('Tối rồi… mình ngủ nhé ☾', 2200);
+  if (data.wake && percent === 100) showSpeech('Mình thức rồi · MAX ✦');
+  else if (changed && percent < lastBrightness && percent < 100)
+    showSpeech('Giảm sáng rồi… mình nghỉ nhé ☾', 2200);
   lastBrightness = percent;
 }
 
@@ -138,10 +146,11 @@ function setPointer(x, y) {
   const nx = clamp((Number(x) - .5) * 2, -1, 1);
   const ny = clamp((Number(y) - .5) * 2, -1, 1);
   screenGlow.style.transform = `translate3d(${(nx * 5).toFixed(1)}px, ${(ny * 3).toFixed(1)}px, 0)`;
-}function report(type, detail = {}) {
-  if (window.chrome?.webview) window.chrome.webview.postMessage({ type, ...detail });
 }
 
+function report(type, detail = {}) {
+  if (window.chrome?.webview) window.chrome.webview.postMessage({ type, ...detail });
+}
 for (const video of [loopA, loopB, transitionVideo]) {
   video.addEventListener('playing', () => report('video-playing', {
     asset: video.dataset.asset || '', transition: video === transitionVideo
@@ -160,7 +169,7 @@ if (window.chrome?.webview) {
 }
 
 function reportPlaybackQuality() {
-  if (!activeLoop || activeLoop.paused || !activeLoop.getVideoPlaybackQuality) return;
+  if (!activeLoop || activeLoop.paused || activeLoop.ended || !activeLoop.getVideoPlaybackQuality) return;
   const quality = activeLoop.getVideoPlaybackQuality();
   report('video-quality', {
     asset: activeLoop.dataset.asset || '',
@@ -170,8 +179,8 @@ function reportPlaybackQuality() {
 }
 setInterval(reportPlaybackQuality, 5000);
 poster.addEventListener('error', () => { poster.style.display = 'none'; });
-setTimeout(() => showSpeech('Mình ở trong hình nền của bạn ✦', 2400), 1000);
-report('wallpaper-ready');
 for (const video of [loopA, loopB, transitionVideo]) {
   video.addEventListener('error', () => poster.classList.remove('hidden'));
 }
+setTimeout(() => showSpeech('Mình ở trong hình nền của bạn ✦', 2400), 1000);
+report('wallpaper-ready');

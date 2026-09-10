@@ -13,7 +13,7 @@ public static class BrightnessReactionPolicy
     {
         percent = Math.Clamp(percent, 0, 100);
         if (percent < 30) return LivingWallpaperState.Sleep;
-        if (percent < 55) return LivingWallpaperState.Drowsy;
+        if (percent < 100) return LivingWallpaperState.Drowsy;
         return LivingWallpaperState.Awake;
     }
 

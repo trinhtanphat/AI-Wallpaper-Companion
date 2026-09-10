@@ -1,4 +1,4 @@
-bin/
+﻿bin/
 obj/
 .vs/
 src/**/bin/
@@ -8,21 +8,15 @@ tests/**/obj/
 logs/
 src/AIWallpaper/AIWallpaper.exe.WebView2/
 
-# Local runtime verification artifacts
+# Runtime verification/cache artifacts
 *-check*.png
-src/AIWallpaper/bin/**/runtime.log
-src/AIWallpaper/bin/**/webview2-data/
-
-# Local source/reference media and tool caches
-/assets/
-/blender/
-/tools/
-
-# Acceptance screenshots generated during runtime verification
 runtime-*.png
 brightness-*.png
 interactive-*.png
+src/AIWallpaper/bin/**/runtime.log
+src/AIWallpaper/bin/**/webview2-data/
 
-# Reference-derived runtime media stays local; public repo ships code/pipeline only
-/src/AIWallpaper/web/assets/girl-awake.png
-/src/AIWallpaper/web/assets/video/*.mp4
+# Local authoring/reference caches; distributable AI source lives under media/
+/assets/
+/blender/
+/tools/

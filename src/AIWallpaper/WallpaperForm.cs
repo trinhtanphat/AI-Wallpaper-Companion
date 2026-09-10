@@ -118,8 +118,10 @@ public sealed class WallpaperForm : Form
         {
             if (!_interaction.Visible)
                 _interaction.Show();
-            var focused = _interaction.FocusInput();
-            RuntimeDiagnostics.Log($"InteractionOverlay shown focus={focused}");
+            var focus = _interaction.FocusInput();
+            RuntimeDiagnostics.Log(
+                $"InteractionOverlay shown foreground={focus.Foreground} " +
+                $"input={focus.InputFocused} ready={focus.Ready}");
         }
         else
         {

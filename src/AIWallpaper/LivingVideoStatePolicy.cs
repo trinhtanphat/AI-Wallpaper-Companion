@@ -3,7 +3,8 @@ namespace AIWallpaper;
 public sealed record VideoPlaybackPlan(
     string LoopAsset,
     string? TransitionAsset,
-    int FadeMs);
+    int FadeMs,
+    bool LoopTarget);
 
 public static class LivingVideoStatePolicy
 {
@@ -11,18 +12,16 @@ public static class LivingVideoStatePolicy
         LivingWallpaperState previous,
         LivingWallpaperState current)
     {
-        var loop = current == LivingWallpaperState.Awake
-            ? "assets/video/awake-loop.mp4"
-            : "assets/video/sleep-loop.mp4";
+        if (current == LivingWallpaperState.Awake)
+        {
+            var transition = previous == LivingWallpaperState.Awake
+                ? null
+                : "assets/video/segment-01-wake.mp4";
+            return new VideoPlaybackPlan(
+                "assets/video/segment-02-awake.mp4", transition, 720, true);
+        }
 
-        if (previous == current ||
-            (previous != LivingWallpaperState.Awake && current != LivingWallpaperState.Awake))
-            return new VideoPlaybackPlan(loop, null, 520);
-
-        var transition = current == LivingWallpaperState.Awake
-            ? "assets/video/wake.mp4"
-            : "assets/video/sleep-transition.mp4";
-
-        return new VideoPlaybackPlan(loop, transition, 720);
+        return new VideoPlaybackPlan(
+            "assets/video/segment-03-sleep.mp4", null, 720, false);
     }
 }

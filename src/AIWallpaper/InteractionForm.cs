@@ -1,3 +1,5 @@
+using AIWallpaper.Desktop;
+
 namespace AIWallpaper;
 
 public sealed class InteractionForm : Form
@@ -115,18 +117,21 @@ public sealed class InteractionForm : Form
         Shown += (_, _) => PositionAndFocus();
     }
 
-    public bool FocusInput()
+    public InteractionFocusResult FocusInput()
     {
         PositionNearTaskbar();
         BringToFront();
+        var foreground = InteractionWindowActivator.TryBringToForeground(Handle);
         Activate();
-        return _input.Focus();
+        _input.Select();
+        var inputFocused = _input.Focus() && _input.Focused;
+        foreground = foreground || InteractionWindowActivator.IsForeground(Handle);
+        return new InteractionFocusResult(foreground, inputFocused);
     }
 
     private void PositionAndFocus()
     {
-        PositionNearTaskbar();
-        _input.Focus();
+        _ = FocusInput();
     }
 
     private void PositionNearTaskbar()
